@@ -68,3 +68,73 @@ items_day_p
 + The plot shows that:  
   + `Fresh furits` have the highest sales volume comparing with the other two;  
   + In generally, people will shop online using Instacart on Sunday.
+
+**Answer the following questions**  
++ How many aisles are there, and which aisles are the most items ordered from?
+```{r}
+n_items_of_aisle <- 
+  instacart_df %>% 
+  count(aisle, name = "n_items") %>% 
+  arrange(desc(n_items))
+
+n_items_of_aisle
+```
+There are ``r length(unique(pull(instacart_df, aisle)))`` aisles in this dataset;
+Most items are ordered from the aisle `fresh vegetables`.
+
++ Make a plot that shows the number of items ordered in each aisle, limiting this to aisle with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+```{r, warning = FALSE, fig.width = 9}
+n_items_of_aisle %>% 
+  filter(n_items > 10000) %>% 
+  mutate(
+    aisle = fct_reorder(aisle, n_items)
+  ) %>% 
+  ggplot(aes(x = n_items, y = aisle, fill = aisle)) +
+  geom_bar(
+    stat = "identity", 
+    show_guide = FALSE
+    ) + 
+  geom_text(aes(label = n_items), size = 2.5, hjust = 0) + 
+  labs(
+    x = "Number of items",
+    y = "Aisle",
+    title = "Number of items ordered in each aisle",
+    caption = "Data from p8105 package"
+  )
+```
+
++ Make a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits". Include the number of times each item is ordered in your table.
+```{r, message = FALSE}
+instacart_df %>% 
+  filter(
+    aisle %in% 
+      c("baking ingredients", "dog food care", "packaged vegetables fruits")
+  ) %>% 
+  group_by(aisle, product_name) %>%
+  summarize(number_items = n()) %>% 
+  arrange(desc(number_items)) %>% 
+  do(head(., n = 3)) %>% 
+  knitr::kable()
+```
+
++ Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 * 7 table)
+```{r, message = FALSE}
+instacart_df %>% 
+  filter(
+    product_name %in%
+      c("Pink Lady Apples", "Coffee Ice Cream")
+  ) %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(
+    mean_hour = mean(order_hour_of_day)
+  ) %>% 
+  mutate(
+    order_dow = weekdays(Sys.Date()+0:6)[order_dow + 1]
+  ) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hour
+  ) %>% 
+  knitr::kable(digits = 1)
+```
+

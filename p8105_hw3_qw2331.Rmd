@@ -29,5 +29,42 @@ scale_fill_discrete = scale_fill_viridis_d
 **Load the `instacart` data**
 ```{r}
 data("instacart")
+instacart_df <- instacart
 ```
 
+**A brief description about `instacart`**
+```{r}
+# Quickly overview
+summary(instacart_df)
+```
++ This dataset contains ``r nrow(instacart_df)`` observations and ``r ncol(instacart_df)`` variables.  
++ Among the variables, there are `11` integer variables and `4` character variables.  
++ Among all the variables, which are ``r names(instacart_df)``, respectively, the key variables are:  
+  + `order_id` represents an order identifier;  
+  + `product_id` represents a product identifier;    
+  + `user_id` represents a customer identifier;  
+  + `aisle_id` represents an aisle identifier;   
+  + `department_id` represents a department identifier.    
++ Illustrative examples of observations are showing below:     
+```{r, message = FALSE}
+# Illustrative examples
+items_day_p <- 
+  instacart_df %>% 
+  filter(aisle %in% c("yogurt", "cream", "fresh fruits")) %>% 
+  group_by(aisle, order_dow) %>% 
+  summarize(n_purchase = n()) %>% 
+  ggplot(aes(x = order_dow, y = n_purchase, color = aisle)) + 
+  geom_point(alpha = .5) + 
+  geom_smooth(se = FALSE, size = .5) + 
+  labs(
+    x = "Day of the week",
+    y = "Purchased quantity",
+    caption = "Data from p8105 package"
+  )
+
+items_day_p
+```
+
++ The plot shows that:  
+  + `Fresh furits` have the highest sales volume comparing with the other two;  
+  + In generally, people will shop online using Instacart on Sunday.

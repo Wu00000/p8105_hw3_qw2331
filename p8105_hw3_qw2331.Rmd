@@ -133,7 +133,7 @@ instacart_df %>%
     mean_hour = mean(order_hour_of_day)
   ) %>% 
   mutate(
-    order_dow = weekdays(Sys.Date() + 0:6)[order_dow + 1]
+    order_dow = weekdays(as.Date("2021-10-17") + 0:6)[order_dow + 1]
   ) %>% 
   pivot_wider(
     names_from = order_dow,
@@ -222,7 +222,7 @@ response_in_state %>%
 ```
 
 + Make a two-panel plot showing, for the years 2006, and 2010, distribution of `data_value` for responses("Poor" to "Excellent") among locations in NY state.
-```{r}
+```{r, fig.width =9}
 resp <- 
     c("Excellent", "Very good", "Good", "Fair", "Poor")
 
@@ -237,7 +237,7 @@ brfss_df %>%
     mean_value = mean(data_value, na.rm = TRUE)
   ) %>% 
   ggplot(aes(x = response, y = mean_value, fill = response)) + 
-  geom_bar(stat = "identity") +  
+  geom_bar(stat = "identity", width = .8) +  
   facet_grid(. ~ year) + 
   labs(
     y = "Mean data value in NY State",
@@ -246,3 +246,39 @@ brfss_df %>%
   )
 ```
 
+
+## Problem 3
+
+**Load the data `accel_data`**
+```{r}
+accel_raw <- 
+  read_csv("./data/accel_data.csv")
+```
+
+**Do some data cleaning & a short description**
+```{r}
+accel_df <- 
+  accel_raw %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_prefix = "activity_",
+    names_to = "minute",
+    values_to = "activity"
+  ) %>% 
+  mutate(
+    minute = as.numeric(minute),
+    dow = ifelse(day %in% weekdays(as.Date("2021-10-16") + 0:1), "weekend", "weekday")
+  ) %>% 
+  relocate(week, day_id, day, dow)
+```
++ A short description:
+  + The existing variables are ``r names(accel_df)`` and there are ``r nrow(accel_df)`` observations;
+  + Variable `week` represents the week number ranging from `1` to `7`;
+  + Variable `day_id` represents a day identifier, ranging from `1` to `35`;
+  + Variable `day` and `dow` represents the day of a week and whether it is a weekday or weekend;
+  + Variable `minute` represents each minute within a 24-hour day, which ranges from `1` to `1440`;
+  + Variable `activity` represents the activity value collected with min value ``r min(pull(accel_df, activity))`` and max value ``r max(pull(accel_df, activity))``.
+
+
+  

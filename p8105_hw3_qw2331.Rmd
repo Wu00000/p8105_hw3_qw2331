@@ -129,12 +129,34 @@ instacart_df %>%
     mean_hour = mean(order_hour_of_day)
   ) %>% 
   mutate(
-    order_dow = weekdays(Sys.Date()+0:6)[order_dow + 1]
+    order_dow = weekdays(Sys.Date() + 0:6)[order_dow + 1]
   ) %>% 
   pivot_wider(
     names_from = order_dow,
     values_from = mean_hour
   ) %>% 
   knitr::kable(digits = 1)
+```
+
+
+## Problem 2
+
+**Load the `BRFSS` data**
+```{r}
+data("brfss_smart2010")
+brfss_df <- brfss_smart2010
+```
+
+**Do some data cleaning**
+```{r}
+brfss_df <- 
+  brfss_df %>% 
+  janitor::clean_names() %>% 
+  filter(topic == "Overall Health") %>% 
+  mutate(
+    response = factor(response,
+                      levels = c("Poor", "Fair", "Good", "Very good", "Excellent"),
+                      ordered = TRUE)
+  )
 ```
 

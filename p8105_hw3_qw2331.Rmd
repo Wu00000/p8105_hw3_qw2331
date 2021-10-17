@@ -10,7 +10,8 @@ library(p8105.datasets)
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
-  out.width = "90%"
+  out.width = "90%",
+  message = FALSE
 )
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
@@ -46,7 +47,7 @@ summary(instacart_df)
   + `aisle_id` represents an aisle identifier;   
   + `department_id` represents a department identifier.    
 + Illustrative examples of observations are showing below:     
-```{r, message = FALSE}
+```{r}
 # Illustrative examples
 items_day_p <- 
   instacart_df %>% 
@@ -96,7 +97,7 @@ n_items_of_aisle %>%
     ) + 
   geom_text(aes(label = n_items), size = 2.5, hjust = 0) + 
   labs(
-    x = "Number of items",
+    x = "Number of items ordered",
     y = "Aisle",
     title = "Number of items ordered in each aisle",
     caption = "Data from p8105 package"
@@ -104,7 +105,7 @@ n_items_of_aisle %>%
 ```
 
 + Make a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits". Include the number of times each item is ordered in your table.
-```{r, message = FALSE}
+```{r}
 instacart_df %>% 
   filter(
     aisle %in% 
@@ -114,11 +115,14 @@ instacart_df %>%
   summarize(number_items = n()) %>% 
   arrange(desc(number_items)) %>% 
   do(head(., n = 3)) %>% 
-  knitr::kable()
+  knitr::kable(
+    caption = "Top 3 most popular items",
+    align = "c"
+  )
 ```
 
 + Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 * 7 table)
-```{r, message = FALSE}
+```{r}
 instacart_df %>% 
   filter(
     product_name %in%
@@ -135,7 +139,10 @@ instacart_df %>%
     names_from = order_dow,
     values_from = mean_hour
   ) %>% 
-  knitr::kable(digits = 1)
+  knitr::kable(
+    digits = 1,
+    caption = "Mean hour of a day ordered",
+    align = "c")
 ```
 
 
@@ -157,6 +164,85 @@ brfss_df <-
     response = factor(response,
                       levels = c("Poor", "Fair", "Good", "Very good", "Excellent"),
                       ordered = TRUE)
+  )
+```
+
+**Answer the following questions**  
++ In 2002, which states were observed at 7 or more locations? What about 2010?
+```{r}
+# Number of locations in 2002
+loc_2002 <- 
+  brfss_df %>% 
+  filter(year == 2002) %>% 
+  group_by(locationabbr) %>% 
+  summarize(n_locations = n()/5) %>% 
+  filter(n_locations >= 7) %>% 
+  arrange(n_locations)
+
+loc_2002 %>%   
+  knitr::kable(
+    caption = "Number of locations in 2002",
+    align = "l"
+  )
+
+# Number of locations in 2010
+loc_2010 <- 
+  brfss_df %>% 
+  filter(year == 2010) %>% 
+  group_by(locationabbr) %>% 
+  summarize(n_locations = n()/5) %>% 
+  filter(n_locations >= 7) %>% 
+  arrange(n_locations)
+
+loc_2010 %>% 
+  knitr::kable(
+    caption = "Number of locations in 2010",
+    align = "l"
+  )
+```
+In 2002, there are `6` states in which 7 or more locations were observed, including ``r pull(loc_2002, locationabbr)``, while in 2010, ``r nrow(loc_2010)`` states met the above conditions and they were ``r pull(loc_2010, locationabbr)``, respectively.
+
++ Construct a dataset that is limited to `Excellent` responses, and contains, year, state, and a variable that averages the `data_value` across locations within a state. Make a "spaghetti" plot of this average value over time within a state.
+```{r, fig.width = 9}
+# Construct a dataset
+response_in_state <-   
+  brfss_df %>% 
+  filter(response == "Excellent") %>% 
+  group_by(year, locationabbr) %>% 
+  summarize(
+    mean_value = mean(data_value, na.rm = TRUE)
+  )
+
+# A "spaghetti" plot
+response_in_state %>% 
+  ggplot(aes(x = year, y = mean_value, color = locationabbr)) + 
+  geom_line(
+    size = .3,
+    show_guide = FALSE)
+```
+
++ Make a two-panel plot showing, for the years 2006, and 2010, distribution of `data_value` for responses("Poor" to "Excellent") among locations in NY state.
+```{r}
+resp <- 
+    c("Excellent", "Very good", "Good", "Fair", "Poor")
+
+brfss_df %>% 
+  filter(
+    year %in% c(2006, 2010) & locationabbr == "NY" & response %in% resp) %>% 
+  mutate(
+    response = factor(response, levels = resp)
+  ) %>% 
+  group_by(year, response) %>% 
+  summarize(
+    mean_value = mean(data_value, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = response, y = mean_value, fill = response)) + 
+  geom_bar(stat = "identity") +  
+  facet_grid(. ~ year) + 
+  labs(
+    y = "Mean data value in NY State",
+    title = "Data value distribution in 2006 vs. 2010",
+    caption = "Data from 08105 package"
   )
 ```
 

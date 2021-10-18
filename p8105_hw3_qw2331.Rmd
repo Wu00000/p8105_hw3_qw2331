@@ -203,7 +203,7 @@ loc_2010 %>%
 In 2002, there are `6` states in which 7 or more locations were observed, including ``r pull(loc_2002, locationabbr)``, while in 2010, ``r nrow(loc_2010)`` states met the above conditions and they were ``r pull(loc_2010, locationabbr)``, respectively.
 
 + Construct a dataset that is limited to `Excellent` responses, and contains, year, state, and a variable that averages the `data_value` across locations within a state. Make a "spaghetti" plot of this average value over time within a state.
-```{r, fig.width = 9}
+```{r, fig.width = 9, warning = FALSE}
 # Construct a dataset
 response_in_state <-   
   brfss_df %>% 
@@ -216,28 +216,22 @@ response_in_state <-
 # A "spaghetti" plot
 response_in_state %>% 
   ggplot(aes(x = year, y = mean_value, color = locationabbr)) + 
-  geom_line(
-    size = .3,
-    show_guide = FALSE)
+  geom_line(size = .3) + 
+  theme(
+    legend.position = "right"
+  ) + 
+  labs(
+    caption = "Data from the p8105 package"
+  )
 ```
 
 + Make a two-panel plot showing, for the years 2006, and 2010, distribution of `data_value` for responses("Poor" to "Excellent") among locations in NY state.
 ```{r, fig.width =9}
-resp <- 
-    c("Excellent", "Very good", "Good", "Fair", "Poor")
-
 brfss_df %>% 
   filter(
-    year %in% c(2006, 2010) & locationabbr == "NY" & response %in% resp) %>% 
-  mutate(
-    response = factor(response, levels = resp)
-  ) %>% 
-  group_by(year, response) %>% 
-  summarize(
-    mean_value = mean(data_value, na.rm = TRUE)
-  ) %>% 
-  ggplot(aes(x = response, y = mean_value, fill = response)) + 
-  geom_bar(stat = "identity", width = .8) +  
+    year %in% c(2006, 2010) & locationabbr == "NY") %>% 
+  ggplot(aes(x = data_value, fill = response)) + 
+  geom_density(alpha = .5) +  
   facet_grid(. ~ year) + 
   labs(
     y = "Mean data value in NY State",
@@ -251,11 +245,13 @@ brfss_df %>%
 
 **Load the data `accel_data`**
 ```{r}
+# Load the data
 accel_raw <- 
   read_csv("./data/accel_data.csv")
 ```
 
-**Do some data cleaning & a short description**
+**Answer the following question**
++ Tidy and wrangle the data
 ```{r}
 accel_df <- 
   accel_raw %>% 
@@ -280,5 +276,52 @@ accel_df <-
   + Variable `minute` represents each minute within a 24-hour day, which ranges from `1` to `1440`;
   + Variable `activity` represents the activity value collected with min value ``r min(pull(accel_df, activity))`` and max value ``r max(pull(accel_df, activity))``.
 
++ Focus on the total activity
+```{r, fig.width = 9}
+# Aggregate minutes data
+ttl_act <- 
+  accel_df %>% 
+  group_by(week, day) %>% 
+  summarize(
+    sum_activity = sum(activity)
+  )
 
-  
+# Create a table
+ttl_act %>% 
+  pivot_wider(
+    names_from = "day",
+    values_from = "sum_activity"
+  ) %>% 
+  relocate(1, 5, 3, 7, 8, 6, 2, 4) %>% 
+  knitr::kable(
+    caption = "Total activity thru a day",
+    align = "l"
+  )
+
+# Draw a plot
+ttl_act %>% 
+  mutate(
+    day = factor(day, levels = weekdays(as.Date("2021-10-18") + 0:6))
+  ) %>% 
+  ggplot(aes(x = day, y = sum_activity, group = week, color = week)) + 
+  geom_point(alpha = .8) + 
+  geom_line()
+```
+
+From the above plot, in general, the total activity on weekends is less than weekdays.
+
++ Show the 24-hour activity time courses for each day
+```{r, fig.width = 9}
+accel_df %>% 
+  ggplot(aes(x = minute / 60, y = activity, color = day)) + 
+  geom_line() + 
+  labs(
+    x = "Hours",
+    y = "Activity",
+    title = "24-hour activity time courses"
+  )
+```
+
++ From the above plot, 
+  + The activity counts are obviously lower from midnight to early morning;
+  + This participant is more active near noon and the late night around 8 pm to 10 pm.

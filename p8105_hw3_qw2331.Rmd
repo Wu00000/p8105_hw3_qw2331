@@ -30,27 +30,28 @@ scale_fill_discrete = scale_fill_viridis_d
 **Load the `instacart` data**
 ```{r}
 data("instacart")
-instacart_df <- instacart
+inst_df <- instacart
 ```
 
 **A brief description about `instacart`**
 ```{r}
 # Quickly overview
-summary(instacart_df)
+summary(inst_df)
+str(inst_df)
 ```
-+ This dataset contains ``r nrow(instacart_df)`` observations and ``r ncol(instacart_df)`` variables.  
-+ Among the variables, there are `11` integer variables and `4` character variables.  
-+ Among all the variables, which are ``r names(instacart_df)``, respectively, the key variables are:  
++ This dataset contains ``r nrow(inst_df)`` observations and ``r ncol(inst_df)`` variables.  
++ Among all the variables, there are `11` integer variables and `4` character variables.  
++ Of all the variables, which are ``r names(inst_df)``, respectively, the key variables are:  
   + `order_id` represents an order identifier;  
   + `product_id` represents a product identifier;    
   + `user_id` represents a customer identifier;  
   + `aisle_id` represents an aisle identifier;   
   + `department_id` represents a department identifier.    
 + Illustrative examples of observations are showing below:     
-```{r}
-# Illustrative examples
+```{r, fig.width = 9}
+# An illustrative example
 items_day_p <- 
-  instacart_df %>% 
+  inst_df %>% 
   filter(aisle %in% c("yogurt", "cream", "fresh fruits")) %>% 
   group_by(aisle, order_dow) %>% 
   summarize(n_purchase = n()) %>% 
@@ -60,27 +61,38 @@ items_day_p <-
   labs(
     x = "Day of the week",
     y = "Purchased quantity",
+    title = "An illustrative example",
     caption = "Data from p8105 package"
   )
 
 items_day_p
+
+# A brief description of the first row data
+inst_df %>% 
+  head(1) %>% 
+  knitr::kable()
 ```
 
 + The plot shows that:  
-  + `Fresh furits` have the highest sales volume comparing with the other two;  
-  + In generally, people will shop online using Instacart on Sunday.
+  + `Fresh furits` had the highest sales volume compared with the other two;  
+  + In generally, people will shop online using Instacart more frequently on Sunday.
++ The table shows that:
+  + At 10 in the morning on Thursday, a customer with `user_id` 112108 bought a `Bulgarian Yogurt`, which `product_id` is 49302;
+  + This product belongs to the `dairy eggs` department with `department_id` 16 and `yogurt` aisle with `aisle_id` 120;
+  + This customer had bought this product before and for this time he/she added this same product into the shopping cart in the first place order (`add_to_cart_order` = 1);
+  + It was the fourth time (`order_number` = 4) this customer shopping online using Instacart and it had been nine days since his/her last shopping trip (`days_since_prior_order` = 9).
 
 **Answer the following questions**  
 + How many aisles are there, and which aisles are the most items ordered from?
 ```{r}
 n_items_of_aisle <- 
-  instacart_df %>% 
+  inst_df %>% 
   count(aisle, name = "n_items") %>% 
   arrange(desc(n_items))
 
 n_items_of_aisle
 ```
-There are ``r length(unique(pull(instacart_df, aisle)))`` aisles in this dataset;
+There are ``r length(unique(pull(inst_df, aisle)))`` aisles in this dataset;
 Most items are ordered from the aisle `fresh vegetables`.
 
 + Make a plot that shows the number of items ordered in each aisle, limiting this to aisle with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
@@ -92,7 +104,7 @@ n_items_of_aisle %>%
   ) %>% 
   ggplot(aes(x = n_items, y = aisle, fill = aisle)) +
   geom_bar(
-    stat = "identity", 
+    stat = "identity",
     show_guide = FALSE
     ) + 
   geom_text(aes(label = n_items), size = 2.5, hjust = 0) + 
@@ -106,7 +118,7 @@ n_items_of_aisle %>%
 
 + Make a table showing the three most popular items in each of the aisles "baking ingredients", "dog food care", and "packaged vegetables fruits". Include the number of times each item is ordered in your table.
 ```{r}
-instacart_df %>% 
+inst_df %>% 
   filter(
     aisle %in% 
       c("baking ingredients", "dog food care", "packaged vegetables fruits")
@@ -123,7 +135,7 @@ instacart_df %>%
 
 + Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 * 7 table)
 ```{r}
-instacart_df %>% 
+inst_df %>% 
   filter(
     product_name %in%
       c("Pink Lady Apples", "Coffee Ice Cream")
@@ -203,7 +215,7 @@ loc_2010 %>%
 In 2002, there are `6` states in which 7 or more locations were observed, including ``r pull(loc_2002, locationabbr)``, while in 2010, ``r nrow(loc_2010)`` states met the above conditions and they were ``r pull(loc_2010, locationabbr)``, respectively.
 
 + Construct a dataset that is limited to `Excellent` responses, and contains, year, state, and a variable that averages the `data_value` across locations within a state. Make a "spaghetti" plot of this average value over time within a state.
-```{r, fig.width = 9, warning = FALSE}
+```{r, fig.width = 9.5, warning = FALSE}
 # Construct a dataset
 response_in_state <-   
   brfss_df %>% 
@@ -221,6 +233,7 @@ response_in_state %>%
     legend.position = "right"
   ) + 
   labs(
+    title = "The average value of Excellent responses within a state",
     caption = "Data from the p8105 package"
   )
 ```
@@ -250,7 +263,7 @@ accel_raw <-
   read_csv("./data/accel_data.csv")
 ```
 
-**Answer the following question**
+**Answer the following question**  
 + Tidy and wrangle the data
 ```{r}
 accel_df <- 
